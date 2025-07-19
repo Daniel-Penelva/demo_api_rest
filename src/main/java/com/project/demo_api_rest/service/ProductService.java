@@ -1,0 +1,32 @@
+package com.project.demo_api_rest.service;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
+import com.project.demo_api_rest.enums.ProductState;
+import com.project.demo_api_rest.model.Product;
+
+public interface ProductService {
+
+    Product addProduct(Product product);
+
+    List<Product> findAllProducts();
+
+    Optional<Product> findByNameProduct(String name);
+
+    Optional<Product> findByIdProduct(Long id);
+
+    Product updateProduct(Long id, Product product);
+
+    Product updatePriceProduct(Long id, BigDecimal price);
+
+    Product updatePriceAndQuantityProduct(Long id, BigDecimal price, int quantity);
+
+    void deleteProduct(Long id);
+
+    Product modifyProductState(Long id, ProductState productState);
+
+    Optional<Product> findAllByProductState(ProductState productState);
+
+}

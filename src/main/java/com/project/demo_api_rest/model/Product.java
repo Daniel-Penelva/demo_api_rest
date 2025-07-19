@@ -1,5 +1,7 @@
 package com.project.demo_api_rest.model;
 
+import java.math.BigDecimal;
+
 import com.project.demo_api_rest.enums.ProductState;
 
 import jakarta.persistence.Column;
@@ -32,7 +34,7 @@ public class Product {
     private String description;
 
     @Column(nullable = false)
-    private String price;
+    private BigDecimal price;
 
     @Column(nullable = false)
     private int quantity;
