@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.project.demo_api_rest.enums.ProductState;
+import com.project.demo_api_rest.exception.ProductNotFoundException;
 import com.project.demo_api_rest.model.Product;
 import com.project.demo_api_rest.repository.ProductRepository;
 import com.project.demo_api_rest.service.ProductService;
@@ -30,13 +31,14 @@ public class ProductServiceImplements implements ProductService {
     }
 
     @Override
-    public Optional<Product> findByNameProduct(String name) {
-        return productRepository.findByName(name);
+    public Product findByNameProduct(String name) {
+        return productRepository.findByName(name)
+                .orElseThrow(() -> new ProductNotFoundException("Produto com o nome " + name + " não encontrado"));
     }
 
     @Override
-    public Optional<Product> findByIdProduct(Long id) {
-        return productRepository.findById(id);
+    public Product findByIdProduct(Long id) {
+        return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
     }
 
     @Override
@@ -92,7 +94,7 @@ public class ProductServiceImplements implements ProductService {
     // Método que busca o id para verificar se o produto existe ou não existe.
     private Product findByIdOrThrow(Long id) {
         return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produto não encontrado com ID: " + id));
+                .orElseThrow(() -> new ProductNotFoundException(id));
     }
 
 }

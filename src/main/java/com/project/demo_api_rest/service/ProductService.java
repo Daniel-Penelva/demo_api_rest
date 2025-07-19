@@ -13,9 +13,9 @@ public interface ProductService {
 
     List<Product> findAllProducts();
 
-    Optional<Product> findByNameProduct(String name);
+    Product findByNameProduct(String name);
 
-    Optional<Product> findByIdProduct(Long id);
+    Product findByIdProduct(Long id);
 
     Product updateProduct(Long id, Product product);
 
