@@ -22,6 +22,7 @@ public class ProductServiceImplements implements ProductService {
 
     @Override
     public Product addProduct(Product product) {
+        System.out.println("Produto sendo salvo na service: " + product); // Adicione este log
         return productRepository.save(product);
     }
 
@@ -87,7 +88,7 @@ public class ProductServiceImplements implements ProductService {
     }
 
     @Override
-    public Optional<Product> findAllByProductState(ProductState productState) {
+    public List<Product> findAllByProductState(ProductState productState) {
         return productRepository.findByProductState(productState);
     }
 

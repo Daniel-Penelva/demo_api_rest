@@ -27,6 +27,6 @@ public interface ProductService {
 
     Product modifyProductState(Long id, ProductState productState);
 
-    Optional<Product> findAllByProductState(ProductState productState);
+    List<Product> findAllByProductState(ProductState productState);
 
 }

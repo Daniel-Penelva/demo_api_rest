@@ -1,5 +1,6 @@
 package com.project.demo_api_rest.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,5 +16,5 @@ public interface ProductRepository extends JpaRepository<Product, Long>{
 
     Optional<Product> findByName(String name);
 
-    Optional<Product> findByProductState(ProductState productState);
+    List<Product> findByProductState(ProductState productState);
 }
