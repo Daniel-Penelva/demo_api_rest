@@ -602,7 +602,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>{
 
 ---
 
-### 📦 Exception Personalized **`ProductService`**
+### 📦 Exception Personalized **`ProductNotFoundException`**
 
 ```java
 package com.project.demo_api_rest.exception;
@@ -1214,6 +1214,533 @@ public ResponseEntity<Product> addProductExample4(@RequestBody Product product) 
 ### ✅ Conclusão
 
 **A forma (2) com `HttpStatus.CREATED`** em endpoints de criação (`POST`). Isso torna sua API mais semântica, aderente ao padrão REST e melhora a clareza para consumidores da API e ferramentas como Swagger.
+
+---
+
+## ⚠️ Tratamento de Exceção Glogal Handler
+
+O **Exception Handler** no contexto do Spring Framework é um mecanismo para tratar exceções lançadas durante a execução de uma aplicação, especialmente em controladores REST. Ele utiliza o método anotado com **@ExceptionHandler** para interceptar exceções específicas ou genéricas e, assim, personalizar a resposta enviada ao cliente.
+
+### Como funciona o tratamento de exceção com @ExceptionHandler
+
+- Você cria métodos em uma classe (geralmente anotada com **@ControllerAdvice** (MVC) ou **@RestControllerAdvice** (REST API) para abrangência global ou diretamente dentro de um controlador) que recebem como parâmetro o tipo da exceção que deseja tratar.
+
+- Esses métodos são anotados com **@ExceptionHandler(ExceptionTipo.class)**, indicando ao Spring que devem ser invocados quando aquela exceção for lançada.
+
+- Dentro desse método, você pode realizar ações como:
+    - Retornar uma resposta HTTP personalizada (por exemplo, com um código de status HTTP específico, como 404 para Not Found ou 500 para Internal Server Error).
+
+- O método pode retornar um objeto **ResponseEntity** para definir explicitamente o corpo e o status HTTP da resposta, ou retornar outras respostas, como views ou simples mensagens.
+
+- O Spring delega o tratamento para esses métodos antes de enviar qualquer resposta ao cliente, permitindo um comportamento consistente e organizado.
+
+### Vantagens do uso do Exception Handler
+
+- Centralização do tratamento de erros, evitando duplicação de código em vários controladores.
+- Controle granular do código de status HTTP (ex: 404 para recurso não encontrado, 412 para pré-condição falhada, etc.).
+- Personalização da mensagem de erro retornada, favorecendo uma comunicação clara com o cliente da API.
+- Integração com o modelo de exceções personalizadas, que podem refletir regras de negócio específicas.
+
+### Pontos complementares
+
+- Caso haja tratamento com **@ExceptionHandler** no próprio controller e também em uma classe com **@ControllerAdvice** (mvc) ou **@RestControllerAdvice** (API REST), o método do controller tem prioridade para aquela exceção.
+- Pode-se também usar **@ResponseStatus** para definir o status HTTP diretamente numa exceção personalizada.
+- O Spring MVC utiliza internamente uma cadeia de resolvers para mapear exceções para respostas, e o **Exception Handler** é o mecanismo mais flexível e recomendado para APIs REST.
+
+Em resumo, o **Exception Handler** é uma forma elegante e controlada de interceptar exceções, definir respostas completas (status, corpo, headers) e garantir que a API REST retorne mensagens claras e apropriadas aos consumidores, alinhado às melhores práticas do desenvolvimento com Spring Boot.
+
+### Diferença entre **@ControllerAdvice** e **@RestControllerAdvice**
+
+#### ✅ `@RestControllerAdvice`
+
+Essa anotação é uma combinação de:
+
+* `@ControllerAdvice` → intercepta exceções lançadas pelos controladores
+* `@ResponseBody` → retorna o corpo da resposta como JSON
+    * `Combinação de @ControllerAdvice + @ResponseBody:` significa que as respostas dos métodos anotados serão convertidas automaticamente para JSON (ou outro formato definido) e enviadas no corpo da resposta HTTP, ideal para APIs REST
+
+* `Tratamento global de exceções:` intercepta exceções lançadas por qualquer controlador anotado com `@RequestMapping`, permitindo centralizar o tratamento de erros da aplicação em um único lugar.
+
+* `Substitui a necessidade de usar @ResponseBody em cada método:` dentro da classe anotada, não é necessário colocar @ResponseBody em cada método, pois já está implícito pela anotação composta.
+
+* `Permite definir métodos com @ExceptionHandler, @InitBinder e @ModelAttribute:` para tratar exceções, personalizar binding de dados e adicionar atributos globais no modelo usado pelos controladores REST.
+
+* `Ideal para APIs RESTful:` enquanto @ControllerAdvice pode servir para aplicações web com views (retornando páginas HTML), o @RestControllerAdvice é especialmente desenhado para serviços REST que retornam dados serializados, como JSON
+
+---
+
+#### ✅ `@ControllerAdvice`
+
+* É uma anotação que define uma classe como um handler global para exceções lançadas em qualquer controller da aplicação, não apenas em uma classe específica.
+
+* Funciona como um componente Spring (@Component) que intercepta exceções ainda não tratadas pelos controllers, permitindo um tratamento unificado e organizado.
+
+* Pode ser usada também para configurar globalmente data binding e atributos de modelo, mas seu uso mais comum é para tratamento global de erros.
+
+* Permite evitar repetição de lógica de tratamento em vários controllers, facilitando manutenção e proporcionando respostas coerentes ao cliente
+
+---
+
+### 📌 Resumindo:
+
+| Anotação                | Quando usar                    | Retorno               |
+| ----------------------- | ------------------------------ | --------------------- |
+| `@ControllerAdvice`     | Para apps MVC com páginas HTML | Retorna páginas/views |
+| `@RestControllerAdvice` | Para APIs REST (JSON/XML)      | Retorna JSON          |
+
+---
+
+### ✅ `ExceptionHandler`
+
+* Anotação usada dentro de `@ControllerAdvice` (MVC) ou `@RestControllerAdvice` (API REST) controllers para indicar que um método trata exceções específicas ou suas subclasses.
+
+* Quando uma exceção do tipo especificado é lançada, o método anotado é invocado para tratar o erro, podendo executar lógica customizada e formar a resposta (exemplo: definir status HTTP e corpo com mensagem de erro).
+
+* Em um `@ControllerAdvice`, métodos com @ExceptionHandler são aplicados globalmente a todos os controllers; dentro de um controller, apenas às exceções daquele controller.
+
+* Permite personalizar o formato da resposta de erro, como retornar objetos JSON padronizados, mensagens específicas ou redirecionar para páginas de erro
+
+---
+
+### 📌 Na prática
+
+#### 📦 Exception Personalized **`ProductNotFoundException`**
+
+```java
+package com.project.demo_api_rest.exception;
+
+public class ProductNotFoundException extends RuntimeException{
+
+    public ProductNotFoundException(String message) {
+        super(message);
+    }
+
+    public ProductNotFoundException(Long id) {
+        super("Produto não encontrado com ID: " + id);
+    }
+    
+}
+```
+
+---
+
+#### 📦 Exception globally Handler **`GlobalExceptionHandler`**
+
+```java
+package com.project.demo_api_rest.exception;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<?> handleProductNotFoundException(ProductNotFoundException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleValidationErrors(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors()
+                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleOtherExceptions(Exception ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Error interno: " + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+}
+```
+
+---
+
+#### 📦 Controller **`ProductController`**
+
+```java
+package com.project.demo_api_rest.controller;
+
+import java.math.BigDecimal;
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import com.project.demo_api_rest.enums.ProductState;
+import com.project.demo_api_rest.model.Product;
+import com.project.demo_api_rest.service.ProductService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/products")
+@RequiredArgsConstructor
+public class ProductController {
+
+    private final ProductService productService;
+
+    // Utilizando Swagger: http://localhost:8080/swagger-ui.html
+
+    /* Exemplo 1: Não Aconselhável fazer assim!!!
+     * Este exemplo não segue boas práticas REST. 
+     * Por que não específica a forma de retorno, no caso, retorna o status 200 (OK).
+     * Além de não seguir boas práticas REST.
+     * É ambíguo em relação a criação de recursos.
+     * http://localhost:8080/products/create-example1
+    */
+    @Operation(summary = "Cria uma novo produto - não segue boas práticas")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Produto criado com sucesso"),
+        @ApiResponse(responseCode = "409", description = "Id já existe")
+    })
+    @PostMapping("/create-example1")
+    public ResponseEntity<Product> addProductOtherExample(@RequestBody @Valid Product product) {
+        System.out.println("Produto recebido na controller: " + product); // Adicione este log
+        return ResponseEntity.ok(productService.addProduct(product));
+    }
+
+
+    /* ===================================================================================== */
+    /* Exemplo 2: Aconselhável fazer assim!!!
+     * Este exemplo segue boas práticas REST. 
+     * Por que específica a forma de retorno, no caso, retorna o status 201 (status(HttpStatus.CREATED)).
+     * Ou seja, segui boas práticas REST e não é ambíguo em relação a criação de recursos.
+     * http://localhost:8080/products/create-example2
+    */
+    @Operation(summary = "Cria uma novo produto - segue boas práticas")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Produto criado com sucesso"),
+        @ApiResponse(responseCode = "409", description = "Id já existe")
+    })
+    @PostMapping("/create-example2")
+    public ResponseEntity<Product> addProduct(@RequestBody @Valid Product product) {
+        Product createdProduct = productService.addProduct(product);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
+    }
+
+
+    /* ===================================================================================== */
+    /* Exemplo 3: Versão Melhorada!!!
+     * Este exemplo segue boas práticas REST. 
+     * Por que específica a forma de retorno, no caso, retorna o status 201 (status(HttpStatus.CREATED)).
+     * Ou seja, segui boas práticas REST e não é ambíguo em relação a criação de recursos.
+     * Ainda gera o header Location que será adicionado à resposta HTTP.
+     * http://localhost:8080/products/create-example3
+    */
+    @Operation(summary = "Cria uma novo produto - Versão melhorada utilizando Location")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Produto criado com sucesso"),
+        @ApiResponse(responseCode = "409", description = "Id já existe")
+    })
+    @PostMapping("/create-example3")
+    public ResponseEntity<Product> addProductExample3(@RequestBody @Valid Product product) {
+        Product createdProduct = productService.addProduct(product);
+        URI location = URI.create("/products/" + createdProduct.getId());  // Cria a URI do novo recurso criado
+        return ResponseEntity.created(location).body(createdProduct); // Retorna 201 Created com o corpo e o header Location
+    }
+
+
+    /* ===================================================================================== */
+    /* Exemplo 4: Versão Melhorada sendo mais robusto!!!
+     * Este exemplo segue boas práticas REST. 
+     * Por que específica a forma de retorno, no caso, retorna o status 201 (status(HttpStatus.CREATED)).
+     * Ou seja, segui boas práticas REST e não é ambíguo em relação a criação de recursos.
+     * Ainda gera o header Location que será adicionado à resposta HTTP, porém mais robusto.
+     * http://localhost:8080/products/create-example4
+    */
+    @Operation(summary = "Cria uma novo produto - Versão melhorada utilizando Location, mais robusto")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Produto criado com sucesso"),
+        @ApiResponse(responseCode = "409", description = "Id já existe")
+    })
+    @PostMapping("/create-example4")
+    public ResponseEntity<Product> addProductExample4(@RequestBody @Valid Product product) {
+        Product createdProduct = productService.addProduct(product);
+
+        URI location = ServletUriComponentsBuilder
+            .fromCurrentContextPath()
+            .path("/products/{id}")
+            .buildAndExpand(createdProduct.getId())
+            .toUri();
+
+        return ResponseEntity.created(location).body(createdProduct);
+    }
+
+
+    /* ===================================================================================== */
+
+    // http://localhost:8080/products/all
+    @Operation(summary = "Lista todas os produtos")
+    @ApiResponse(responseCode = "200", description = "Produtos listados com sucesso")
+    @GetMapping("/all")
+    public ResponseEntity<List<Product>> findAllProducts() {
+        return ResponseEntity.ok(productService.findAllProducts());
+    }
+
+
+    /* ===================================================================================== */
+
+
+    // http://localhost:8080/products/name/CadeiraGamer
+    @Operation(summary = "Busca um produto pelo nome")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Produto encontrado"),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+    })
+    @GetMapping("/name/{name}")
+    public ResponseEntity<Product> findByNameProduct(@PathVariable String name) {
+        return ResponseEntity.ok(productService.findByNameProduct(name));   
+    }
+
+    /** Exemplo caso não tenha tratamento de exceção no service - Utilizando O Optional: 
+    
+        @GetMapping("/name/{name}")
+        public ResponseEntity<Product> findByNameProduct(@PathVariable String name) {
+            Optional<Product> product = productService.findByNameProduct(name);
+            return product.isPresent() ? ResponseEntity.ok(product.get()) : ResponseEntity.status(HttpStatus.NOT_FOUND).body("Produto não encontrado");
+        }
+    */
+
+
+    /* ===================================================================================== */
+
+
+    // http://localhost:8080/products/1
+    @Operation(summary = "Busca um produto pelo ID")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Produto encontrado"),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<Product> findByIdProduct(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.findByIdProduct(id));
+    }
+
+
+    /* ===================================================================================== */
+
+
+    // http://localhost:8080/products/update/1
+    @Operation(summary = "Atualizar um produto existente")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Produto atualizado com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+    })
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
+        return ResponseEntity.ok(productService.updateProduct(id, product));
+    }
+    
+
+    /* ===================================================================================== */
+
+
+    // http://localhost:8080/products/update-partial-price/1
+    @Operation(summary = "Atualiza parcialmente o preço de um produto existente")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Produto atualizado parcialmente"),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+    })
+    @PatchMapping("/update-partial-price/{id}")
+    public ResponseEntity<Product> updatePriceProduct(@PathVariable Long id, @RequestBody BigDecimal price) {
+        return ResponseEntity.ok(productService.updatePriceProduct(id, price));
+    }
+
+
+    /* ===================================================================================== */
+
+
+    // http://localhost:8080/products/update-patial-price-quantity/1
+    @Operation(summary = "Atualiza parcialmente o preço e a quantidade de um produto existente")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Produto atualizado parcialmente"),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+    })
+    @PatchMapping("/update-patial-price-quantity/{id}")
+    public ResponseEntity<Product> updatePriceAndQuantityProduct(@PathVariable Long id, @RequestParam BigDecimal price, @RequestParam int quantity) {
+        return ResponseEntity.ok(productService.updatePriceAndQuantityProduct(id, price, quantity));
+    }
+
+    /*
+     * ATENÇÃO: 
+     * O Spring não aceita dois @RequestBody ao mesmo tempo. A requisição HTTP só pode ter um corpo JSON por vez, então só um parâmetro pode usar @RequestBody.
+     * Aqui, o certo seria utilizar um DTO, mas como não estou utilizando. Uma alternativa é passar o "price" e "quantity" como parâmetros de query.
+     * Isso funciona mais têm limitações se os dados forem mais complexos (ex: objetos aninhados, listas etc.).
+    */
+
+
+    /* ===================================================================================== */
+
+    // http://localhost:8080/products/delete/1
+    @Operation(summary = "Remove um produto pelo ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Produto removido com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+    })
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Product> deleteProduct(@PathVariable Long id) { 
+        productService.deleteProduct(id);
+            return ResponseEntity.noContent().build();
+            /** Ou pode fazer assim: return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); */
+    }
+
+
+    /* ===================================================================================== */
+
+    // http://localhost:8080/products/delete/1
+
+    @Operation(summary = "Atualiza parcialmente o estado do produto de um produto existente")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Produto atualizado parcialmente"),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+    })
+    @PatchMapping("/update-partial-productState/{id}")
+    public ResponseEntity<Product> modifyProductState(@PathVariable Long id, @RequestBody ProductState productState) {
+        return ResponseEntity.ok(productService.modifyProductState(id, productState));
+    }
+
+
+    /* ===================================================================================== */
+
+
+    // http://localhost:8080/products/product-state/AVAILABLE
+    @Operation(summary = "Busca produto pelo estado do produto")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Produto encontrado"),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+    })
+    @GetMapping("/product-state/{productState}")
+    public ResponseEntity<List<Product>> findAllByProductState(@PathVariable ProductState productState) {
+            return ResponseEntity.ok(productService.findAllByProductState(productState));
+    }
+    
+}
+```
+
+### Diferença entre `ResponseEntity<Product>` e `ResponseEntity<?>`
+
+#### ✅ `ResponseEntity<Product>`
+
+Essa abordagem **é mais específica e recomendada** quando **tem certeza do tipo de dado retornado**, como no caso de um endpoint que **sempre retorna um `Product`**, como em:
+
+```java
+@PostMapping("/create")
+public ResponseEntity<Product> create(@RequestBody Product product) {
+    Product createdProduct = productService.addProduct(product);
+    return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
+}
+```
+
+* **Vantagens**:
+
+  * Melhor suporte a documentação com Swagger/OpenAPI.
+  * Facilita validações de tipo em tempo de compilação.
+  * É mais expressivo e autodescritivo.
+
+#### 🟡 `ResponseEntity<?>`
+
+Essa abordagem é mais **genérica** e geralmente usada quando:
+
+* O retorno pode ser de **tipos variados**, como um `Product`, um `Map`, uma `String`, um `Erro`, etc.
+* Ou quando você quer **omitir o tipo deliberadamente**, como em controladores genéricos ou endpoints reutilizáveis.
+* Ou no caso que usei para criar tratamento de exceção usando o try...catch() e retornar um ResponseEntity<?> com o erro.
+
+* Exemplo de uso 
+
+```java
+@GetMapping("/name/{name}")
+public ResponseEntity<?> findByNameProduct(@PathVariable String name) {
+    try {
+        return ResponseEntity.ok(productService.findByNameProduct(name));
+    } catch(Exception exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro ao buscar o produto por nome: " + exception.getMessage());
+    }   
+}
+```
+
+* Exemplo de uso - `List`:
+```java
+@GetMapping("/product-state/{productState}")
+public ResponseEntity<List<Product>> findAllByProductState(@PathVariable ProductState productState) {
+    List<Product> products = productService.findAllByProductState(productState);
+
+    if (products.isEmpty()) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(products);
+    }
+    return ResponseEntity.ok(products);
+}
+```
+
+* Exemplo de uso - `Optional`:
+```java
+@GetMapping("/produto-ou-erro")
+public ResponseEntity<?> buscarProduto(@RequestParam String nome) {
+    Optional<Product> product = productService.findByName(nome);
+    return product.<ResponseEntity<?>>map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("Produto não encontrado"));
+}
+```
+
+---
+
+#### 🟢 Qual usar?
+
+* **Usar `ResponseEntity<T>`** sempre que souber o tipo exato de retorno.
+* **Usar `ResponseEntity<?>`** apenas quando você **precisar de flexibilidade** ou **o tipo for dinâmico**.
+
+#### ✅ Exemplo correto com tipo:
+
+```java
+@PostMapping("/create")
+public ResponseEntity<Product> addProduct(@RequestBody @Valid Product product) {
+    Product created = productService.addProduct(product);
+    return ResponseEntity.created(URI.create("/products/" + created.getId())).body(created);
+}
+```
+
+#### 🟡 Exemplo justificado com `<?>`:
+
+```java
+@PostMapping("/create")
+public ResponseEntity<?> addProduct(@RequestBody Product product) {
+    try {
+        Product created = productService.addProduct(product);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    }
+}
+```
 
 ---
 

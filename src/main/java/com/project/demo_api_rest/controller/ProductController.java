@@ -145,13 +145,8 @@ public class ProductController {
         @ApiResponse(responseCode = "404", description = "Produto não encontrado")
     })
     @GetMapping("/name/{name}")
-    public ResponseEntity<?> findByNameProduct(@PathVariable String name) {
-        try {
-            return ResponseEntity.ok(productService.findByNameProduct(name));
-        } catch(Exception exception) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro ao buscar o produto por nome: " + exception.getMessage());
-        }
-        
+    public ResponseEntity<Product> findByNameProduct(@PathVariable String name) {
+        return ResponseEntity.ok(productService.findByNameProduct(name));   
     }
 
     /** Exemplo caso não tenha tratamento de exceção no service - Utilizando O Optional: 
@@ -174,13 +169,8 @@ public class ProductController {
         @ApiResponse(responseCode = "404", description = "Produto não encontrado")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<?> findByIdProduct(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(productService.findByIdProduct(id));
-        } catch(Exception exception) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro ao buscar o produto por ID: " + exception.getMessage());
-        }
-        
+    public ResponseEntity<Product> findByIdProduct(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.findByIdProduct(id));
     }
 
 
@@ -194,13 +184,8 @@ public class ProductController {
         @ApiResponse(responseCode = "404", description = "Produto não encontrado")
     })
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody Product product) {
-        try {
-            return ResponseEntity.ok(productService.updateProduct(id, product));
-        }catch(Exception exception) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro ao atuaizar o produto: " + exception.getMessage());
-        }
-        
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
+        return ResponseEntity.ok(productService.updateProduct(id, product));
     }
     
 
@@ -214,13 +199,8 @@ public class ProductController {
         @ApiResponse(responseCode = "404", description = "Produto não encontrado")
     })
     @PatchMapping("/update-partial-price/{id}")
-    public ResponseEntity<?> updatePriceProduct(@PathVariable Long id, @RequestBody BigDecimal price) {
-        try{
-            return ResponseEntity.ok(productService.updatePriceProduct(id, price));
-        }catch(Exception exception) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro ao atuaizar parcialmente o produto: " + exception.getMessage());
-        }
-        
+    public ResponseEntity<Product> updatePriceProduct(@PathVariable Long id, @RequestBody BigDecimal price) {
+        return ResponseEntity.ok(productService.updatePriceProduct(id, price));
     }
 
 
@@ -234,13 +214,8 @@ public class ProductController {
         @ApiResponse(responseCode = "404", description = "Produto não encontrado")
     })
     @PatchMapping("/update-patial-price-quantity/{id}")
-    public ResponseEntity<?> updatePriceAndQuantityProduct(@PathVariable Long id, @RequestParam BigDecimal price, @RequestParam int quantity) {
-        try {
-            return ResponseEntity.ok(productService.updatePriceAndQuantityProduct(id, price, quantity));
-        }catch(Exception exception) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro ao atuaizar parcialmente o produto: " + exception.getMessage());
-        }
-        
+    public ResponseEntity<Product> updatePriceAndQuantityProduct(@PathVariable Long id, @RequestParam BigDecimal price, @RequestParam int quantity) {
+        return ResponseEntity.ok(productService.updatePriceAndQuantityProduct(id, price, quantity));
     }
 
     /*
@@ -260,14 +235,10 @@ public class ProductController {
         @ApiResponse(responseCode = "404", description = "Produto não encontrado")
     })
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteProduct(@PathVariable Long id) { 
-        try {
-            productService.deleteProduct(id);
+    public ResponseEntity<Product> deleteProduct(@PathVariable Long id) { 
+        productService.deleteProduct(id);
             return ResponseEntity.noContent().build();
-            /** Ou pode fazer assim: return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); */ 
-        }catch(Exception exception) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro ao deletar produto: " + exception.getMessage());
-        }
+            /** Ou pode fazer assim: return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); */
     }
 
 
@@ -281,12 +252,8 @@ public class ProductController {
         @ApiResponse(responseCode = "404", description = "Produto não encontrado")
     })
     @PatchMapping("/update-partial-productState/{id}")
-    public ResponseEntity<?> modifyProductState(@PathVariable Long id, @RequestBody ProductState productState) {
-        try {
-            return ResponseEntity.ok(productService.modifyProductState(id, productState));
-        } catch(Exception exception) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Erro ao alterar estado do produto: " + exception.getMessage());
-        }
+    public ResponseEntity<Product> modifyProductState(@PathVariable Long id, @RequestBody ProductState productState) {
+        return ResponseEntity.ok(productService.modifyProductState(id, productState));
     }
 
 
@@ -301,12 +268,7 @@ public class ProductController {
     })
     @GetMapping("/product-state/{productState}")
     public ResponseEntity<List<Product>> findAllByProductState(@PathVariable ProductState productState) {
-            List<Product> products = productService.findAllByProductState(productState);
-
-            if (products.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(products);
-            }
-            return ResponseEntity.ok(products);
+            return ResponseEntity.ok(productService.findAllByProductState(productState));
     }
     
 }
