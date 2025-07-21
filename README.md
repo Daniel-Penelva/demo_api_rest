@@ -1744,4 +1744,124 @@ public ResponseEntity<?> addProduct(@RequestBody Product product) {
 
 ---
 
+## Criando DTO para solucionar o problema do método `updatePriceAndQuantityProduct`
+
+### ✅ Por que usei `UpdatePriceAndQuantityDTO`?
+
+Esse é um **DTO (Data Transfer Object)** que eu criei para **encapsular os dois dados (`price` e `quantity`)** que estão vindo do corpo da requisição (`@RequestBody`), pois:
+
+* O Spring **não permite mais de um `@RequestBody`** por método.
+* Encapsular os dados num único objeto é uma **boa prática** (mais legível, validável, escalável).
+
+---
+
+### ❌ Este exemplo gera erro:
+
+Não pode escrever assim:
+
+```java
+public ResponseEntity<Product> updatePriceAndQuantityProduct(
+    @PathVariable Long id,
+    @RequestBody BigDecimal price,
+    @RequestBody int quantity) { 
+        // código
+     }
+```
+
+O Spring **não aceita dois `@RequestBody` ao mesmo tempo**. A requisição HTTP só pode ter **um corpo JSON por vez**, então **só um parâmetro pode usar `@RequestBody`**.
+
+---
+
+### ✅ Como corrigir
+
+Pode fazer de **duas formas válidas**:
+
+---
+
+#### ✔️ **Forma 1: Criar o DTO (`UpdatePriceAndQuantityDTO`)**
+
+##### 1. Classe DTO:
+
+```java
+package com.project.demo_api_rest.dto;
+
+import java.math.BigDecimal;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class UpdatePriceAndQuantityDTO {
+    
+    private BigDecimal price;
+    private int quantity;
+}
+```
+
+##### 2. Usando no Controller - `ProductController`:
+
+```java
+@Operation(summary = "Atualiza parcialmente o preço e a quantidade de um produto existente utilizando DTO")
+@ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Produto atualizado parcialmente"),
+    @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+})
+@PatchMapping("/{id}/update-patial-price-quantity")
+public ResponseEntity<Product> updatePriceQuantityProductDTO(@PathVariable Long id, @RequestBody UpdatePriceAndQuantityDTO dto) {
+    return ResponseEntity.ok(productService.updatePriceAndQuantityProduct(id, dto.getPrice(), dto.getQuantity()));
+}
+```
+
+##### 3. Service permanece igual - `ProductServiceImpl`:
+
+```java
+@Override
+public Product updatePriceAndQuantityProduct(Long id, BigDecimal price, int quantity) {
+    Product productBD = findByIdOrThrow(id);
+    productBD.setPrice(price);
+    productBD.setQuantity(quantity);
+    return productRepository.save(productBD);
+}
+```
+
+---
+
+#### ✔️ Forma 2: Usando query parameters (para evitar DTO)
+
+Para **evitar usar um DTO**, uma alternativa é passar `price` e `quantity` **como parâmetros de query**, assim:
+
+```http
+PUT /products/1/update?price=100.00&quantity=5
+```
+
+```java
+@Operation(summary = "Atualiza parcialmente o preço e a quantidade de um produto existente")
+@ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Produto atualizado parcialmente"),
+    @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+})
+@PatchMapping("/update-patial-price-quantity/{id}")
+public ResponseEntity<Product> updatePriceAndQuantityProduct(@PathVariable Long id, @RequestParam BigDecimal price, @RequestParam int quantity) {
+    return ResponseEntity.ok(productService.updatePriceAndQuantityProduct(id, price, quantity));
+}
+```
+
+🔸 Isso funciona, mas tem **limitações** se os dados forem mais complexos (ex: objetos aninhados, listas etc.).
+
+---
+
+### ✅ Conclusão:
+
+| Situação                          | Recomendado? | Justificativa                                      |
+| --------------------------------- | ------------ | -------------------------------------------------- |
+| Dois `@RequestBody`               | ❌            | Não suportado pelo Spring                          |
+| Usar DTO com `@RequestBody`       | ✅            | Organizado, validável, padrão comum em APIs REST   |
+| Usar `@RequestParam` para simples | ✅            | Ok para casos simples (evita criar classes extras) |
+
+
+---
+
 ## Feito por: **`Daniel Penelva`**

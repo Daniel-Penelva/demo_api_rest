@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.project.demo_api_rest.dto.UpdatePriceAndQuantityDTO;
 import com.project.demo_api_rest.enums.ProductState;
 import com.project.demo_api_rest.model.Product;
 import com.project.demo_api_rest.service.ProductService;
@@ -224,6 +225,18 @@ public class ProductController {
      * Aqui, o certo seria utilizar um DTO, mas como não estou utilizando. Uma alternativa é passar o "price" e "quantity" como parâmetros de query.
      * Isso funciona mais têm limitações se os dados forem mais complexos (ex: objetos aninhados, listas etc.).
     */
+
+    /* =========== Exemplificando utilizando DTO =========== */
+
+    @Operation(summary = "Atualiza parcialmente o preço e a quantidade de um produto existente utilizando DTO")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Produto atualizado parcialmente"),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+    })
+    @PatchMapping("/{id}/update-patial-price-quantity")
+    public ResponseEntity<Product> updatePriceQuantityProductDTO(@PathVariable Long id, @RequestBody UpdatePriceAndQuantityDTO dto) {
+        return ResponseEntity.ok(productService.updatePriceAndQuantityProduct(id, dto.getPrice(), dto.getQuantity()));
+    }
 
 
     /* ===================================================================================== */
