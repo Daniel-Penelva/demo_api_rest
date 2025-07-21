@@ -11,6 +11,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
@@ -51,5 +53,10 @@ public class Product {
     @Enumerated(EnumType.STRING)  // @EnumType - Define o tipo de enumeração. No caso EnumType.String define que o enum será armazenado como string.
     @Column(name = "product_state", nullable = false)
     private ProductState productState;
+
+    // Muitos produtos podem ter apenas uma categoria
+    @ManyToOne
+    @JoinColumn(name = "id_category", referencedColumnName = "id_category")
+    private Category category;
 
 }
