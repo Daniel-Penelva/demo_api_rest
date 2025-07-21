@@ -56,7 +56,7 @@ public class Product {
 
     // Muitos produtos podem ter apenas uma categoria
     @ManyToOne
-    @JoinColumn(name = "id_category", referencedColumnName = "id_category")
+    @JoinColumn(name = "id_category", referencedColumnName = "id")
     private Category category;
 
 }
