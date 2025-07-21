@@ -2,7 +2,6 @@ package com.project.demo_api_rest.service;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 import com.project.demo_api_rest.enums.ProductState;
 import com.project.demo_api_rest.model.Product;
