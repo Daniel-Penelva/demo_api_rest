@@ -360,5 +360,20 @@ public class ProductController {
 
             return ResponseEntity.ok(productService.updateProduct(productId, createProduct));
     }
+
+
+    /* ===================================================================================== */
+    /* =============== Criando produto e associa com uma categoria =============== */
+
+    @Operation(summary = "Cria uma novo produto e associa com uma categoria")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Produto criado e associado com Categoria com sucesso"),
+        @ApiResponse(responseCode = "409", description = "Id já existe")
+    })
+    @PostMapping("/createProduct/{categoryId}/createCategory")
+    public ResponseEntity<Product> associateCategoryInProduct(@RequestParam Long categoryId, @RequestBody Product product) {
+        Product productSave = productService.associateCategoryInProduct(categoryId, product);
+        return ResponseEntity.status(HttpStatus.CREATED).body(productSave);
+    }
     
 }

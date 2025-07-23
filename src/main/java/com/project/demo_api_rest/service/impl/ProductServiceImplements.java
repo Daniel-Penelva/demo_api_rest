@@ -2,13 +2,15 @@ package com.project.demo_api_rest.service.impl;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
 import com.project.demo_api_rest.enums.ProductState;
+import com.project.demo_api_rest.exception.CategoryNotFoundException;
 import com.project.demo_api_rest.exception.ProductNotFoundException;
+import com.project.demo_api_rest.model.Category;
 import com.project.demo_api_rest.model.Product;
+import com.project.demo_api_rest.repository.CategoryRepository;
 import com.project.demo_api_rest.repository.ProductRepository;
 import com.project.demo_api_rest.service.ProductService;
 
@@ -19,12 +21,31 @@ import lombok.RequiredArgsConstructor;
 public class ProductServiceImplements implements ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
     @Override
     public Product addProduct(Product product) {
         System.out.println("Produto sendo salvo na service: " + product); // Adicione este log
         return productRepository.save(product);
     }
+
+    @Override
+    public Product associateCategoryInProduct(Long categoryId, Product product) {
+        findByIdCategory(categoryId);
+        return addProduct(product);
+    }
+
+    /*  Ou pode Fazer assim no método associateCategoryInProduct: 
+        
+        @Override
+        public Product associateCategoryInProduct1(Long categoryId, Product product) {
+            Category saveCategory = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
+
+            product.setCategory(saveCategory);
+            return productRepository.save(product);
+        }
+    */
 
     @Override
     public List<Product> findAllProducts() {
@@ -51,7 +72,7 @@ public class ProductServiceImplements implements ProductService {
         productBD.setPrice(product.getPrice());
         productBD.setQuantity(product.getQuantity());
         productBD.setProductState(product.getProductState());
-        productBD.setCategory(product.getCategory());
+        productBD.setCategory(product.getCategory());  // Bastou essa linha para atualizar a categoria
 
         return productRepository.save(productBD);
     }
@@ -98,5 +119,13 @@ public class ProductServiceImplements implements ProductService {
         return productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
     }
+
+    // Método que busca o id para verificar se a categoria existe ou não existe.
+    private Category findByIdCategory(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException(id));
+    }
+
+    
 
 }

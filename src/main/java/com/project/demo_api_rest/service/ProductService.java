@@ -10,6 +10,8 @@ public interface ProductService {
 
     Product addProduct(Product product);
 
+    Product associateCategoryInProduct(Long categoryId, Product product);
+
     List<Product> findAllProducts();
 
     Product findByNameProduct(String name);
