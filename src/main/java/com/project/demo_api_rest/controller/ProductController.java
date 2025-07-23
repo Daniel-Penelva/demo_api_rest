@@ -3,7 +3,6 @@ package com.project.demo_api_rest.controller;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -282,6 +281,84 @@ public class ProductController {
     @GetMapping("/product-state/{productState}")
     public ResponseEntity<List<Product>> findAllByProductState(@PathVariable ProductState productState) {
             return ResponseEntity.ok(productService.findAllByProductState(productState));
+    }
+
+
+    /* ===================================================================================== */
+    /* =============== Manuseando Parâmetros e associando com Category - @RequestParam =============== */
+
+    /** JSON
+        {
+            "id": 0,
+            "name": "string",
+            "description": "string",
+            "price": 0,
+            "quantity": 1,
+            "productState": "AVAILABLE",
+            "category": {
+                "id": 0,
+                "name": "string"
+            }
+        }
+    */
+
+    // http://localhost:8080/products/create-param/1?nomeProduto={nomeProduto}&descricaoProduto={descricaoProduto}&precoProduto={precoProduto}&quantidadeProduto={quantidadeProduto}&estadoProduto{estadoProduto}
+    @Operation(summary = "Cria uma novo produto - Manuseando Parâmetros")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Produto criado com sucesso"),
+        @ApiResponse(responseCode = "409", description = "Id já existe")
+    })
+    @PostMapping("/create-param/{categoryId}")
+    public ResponseEntity<Product> addProductWithParam(
+        @RequestBody @Valid Product product, 
+        @PathVariable Long categoryId,
+        @RequestParam("nomeProduto") String name,
+        @RequestParam("descricaoProduto") String description,
+        @RequestParam("precoProduto") BigDecimal price,
+        @RequestParam("quantidadeProduto") int quantity,
+        @RequestParam("estadoProduto") ProductState productState) {
+
+            Product createProduct = new Product();
+            createProduct.setCategory(product.getCategory());
+            createProduct.setName(name);
+            createProduct.setDescription(description);
+            createProduct.setPrice(price);
+            createProduct.setQuantity(quantity);
+            createProduct.setProductState(productState);
+
+            Product productSave = productService.addProduct(createProduct);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(productSave);
+    }
+
+
+    /* =============== Manuseando Parâmetros e associando com Category - @RequestParam =============== */
+
+    @Operation(summary = "Atualizar um produto existente - Manuseando Parâmetros")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Produto atualizado com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+    })
+    @PutMapping("/update/{productId}/category/{categoryId}")
+    public ResponseEntity<Product> updateProductWithParam(
+        @PathVariable Long productId, 
+        @PathVariable Long categoryId,
+        @RequestBody Product product,
+        @RequestParam("nomeProduto") String name,
+        @RequestParam("descricaoProduto") String description,
+        @RequestParam("precoProduto") BigDecimal price,
+        @RequestParam("quantidadeProduto") int quantity,
+        @RequestParam("estadoProduto") ProductState productState) {
+
+            Product createProduct = new Product();
+            createProduct.setCategory(product.getCategory());
+            createProduct.setName(name);
+            createProduct.setDescription(description);
+            createProduct.setPrice(price);
+            createProduct.setQuantity(quantity);
+            createProduct.setProductState(productState);
+
+            return ResponseEntity.ok(productService.updateProduct(productId, createProduct));
     }
     
 }

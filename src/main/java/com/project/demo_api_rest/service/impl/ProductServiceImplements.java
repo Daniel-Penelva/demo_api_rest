@@ -51,6 +51,7 @@ public class ProductServiceImplements implements ProductService {
         productBD.setPrice(product.getPrice());
         productBD.setQuantity(product.getQuantity());
         productBD.setProductState(product.getProductState());
+        productBD.setCategory(product.getCategory());
 
         return productRepository.save(productBD);
     }

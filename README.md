@@ -1864,4 +1864,371 @@ public ResponseEntity<Product> updatePriceAndQuantityProduct(@PathVariable Long 
 
 ---
 
+## Manipulando @RequestParam
+
+✅ A anotação **`@RequestParam`** do Spring é utilizada para capturar parâmetros enviados na URL da requisição HTTP, especificamente aqueles que vêm após o sinal de interrogação ? na chamada, conhecidos como query parameters (parâmetros de consulta). 
+
+✅ Por padrão, o parâmetro é obrigatório (required=true), ou seja, se não for informado, ocorrerá erro na requisição. Isso pode ser alterado configurando required=false para que o parâmetro seja opcional, podendo receber null caso não seja informado.
+    
+  - **Exemplo:** `@RequestParam(required = false) String nome`
+
+✅ Pode-se definir um valor padrão para o parâmetro com o atributo defaultValue, para uso quando o parâmetro não for enviado.
+
+  - **Exemplo:** `@RequestParam(defaultValue = "nome") String nome`
+
+✅ É possível receber múltiplos parâmetros anotando vários parâmetros com @RequestParam ou capturar todos os parâmetros da requisição usando um `Map<String, String>`.
+
+  - **Exemplo:** `@RequestParam String nome, @RequestParam String idade` ou `@RequestParam Map<String, String> params`
+
+✅ Não é o mesmo que `@PathVariable`, que captura um segmento dinâmico da URL (parte do caminho, sem ser query string). O @RequestParam é usado para parâmetros após o ? na URL, enquanto o @PathVariable é usado para capturar valores diretamente no caminho da URL.
+
+---
+
+### 📌 Na prática - exemplo `Category`
+
+#### 📦 Entity **`Category`**
+
+```java
+@Entity
+@Table(name = "CATEGORY_TBL")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Category {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 100)
+    @NotBlank(message = "Nome da categoria é obrigatório")
+    private String name;
+}
+```
+
+---
+
+#### 📦 Repository **`CategoryRepository`**
+
+```java
+@Repository
+public interface CategoryRepository extends JpaRepository<Category, Long> {
+
+    Optional<Category> findByName(String name);
+
+    boolean existsByName(String name);
+}
+```
+
+---
+
+#### 📦 Exception Personalid **`CategoryNotFoundException`**
+
+```java
+public class CategoryNotFoundException extends RuntimeException{
+
+    public CategoryNotFoundException(String message) {
+        super(message);
+    }
+
+    public CategoryNotFoundException(Long id) {
+        super("Categoria não encontrado com ID: " + id);
+    }
+    
+}
+```
+
+---
+
+#### 📦 Service **`CategoryService`**
+
+```java
+public interface CategoryService {
+
+    Category addCategory(Category category);
+
+    List<Category> getAllCategories();
+
+    Category getCategoryById(Long id);
+
+    Category updateCategory(Long id, Category category);
+
+    void deleteCategory(Long id);
+}
+```
+
+---
+
+#### 📦 Service Implements **`CategoryServiceImplements`**
+
+```java
+@Service
+@RequiredArgsConstructor
+public class CategoryServiceImpl implements CategoryService {
+
+    private final CategoryRepository categoryRepository;
+
+    @Override
+    public Category addCategory(Category category) {
+        return categoryRepository.save(category);
+    }
+
+    @Override
+    public List<Category> getAllCategories() {
+        return categoryRepository.findAll();
+    }
+
+    @Override
+    public Category getCategoryById(Long id) {
+        return findByIdOrThrow(id);
+    }
+
+    @Override
+    public Category updateCategory(Long id, Category category) {
+        Category categoryBD = findByIdOrThrow(id);
+        categoryBD.setName(category.getName());
+        return categoryRepository.save(categoryBD);
+    }
+
+    @Override
+    public void deleteCategory(Long id) {
+        findByIdOrThrow(id);
+        categoryRepository.deleteById(id);
+    }
+
+    // Método que busca o id para verificar se a categoria existe ou não existe.
+    private Category findByIdOrThrow(Long id) {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException(id));
+    }
+
+}
+```
+
+---
+
+#### 📦 Exception Global Handler **`GlobalExceptionHandler`**
+
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(CategoryNotFoundException.class)
+    public ResponseEntity<?> handleCategoryNotFoundException(CategoryNotFoundException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+}
+```
+
+---
+
+#### 📦 Controller **`CategoryController`**
+
+```java
+@RestController()
+@RequestMapping("/categories")
+@RequiredArgsConstructor
+public class CategoryController {
+
+    private final CategoryService categoryService;
+
+    // Utilizando Swagger: http://localhost:8080/swagger-ui.html
+
+
+    // http://localhost:8080/categories/create
+    @Operation(summary = "Cria uma nova categoria")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Categoria criada com sucesso"),
+        @ApiResponse(responseCode = "409", description = "Id já existe")
+    })
+    @PostMapping("/create")
+    public ResponseEntity<Category> addCategory(@RequestBody Category category) {
+        Category createdCategory = categoryService.addCategory(category);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdCategory);
+    }
+
+
+    /* ===================================================================================== */
+
+    // http://localhost:8080/categories/all
+    @Operation(summary = "Lista todas as Categorias")
+    @ApiResponse(responseCode = "200", description = "Categorias listadas com sucesso")
+    @GetMapping("/all")
+    public ResponseEntity<List<Category>> getAllCategories() {
+        return ResponseEntity.ok(categoryService.getAllCategories());
+    }
+
+
+    /* ===================================================================================== */
+
+    // http://localhost:8080/categories/1
+    @Operation(summary = "Busca uma Categoria pelo ID")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Categoria encontrada"),
+        @ApiResponse(responseCode = "404", description = "Categoria não encontrada")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
+        return ResponseEntity.ok(categoryService.getCategoryById(id));
+    }
+
+
+    /* ===================================================================================== */
+
+    // http://localhost:8080/categories/update/1
+    @Operation(summary = "Atualizar uma Categoria existente")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Categoria atualizada com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Categoria não encontrada")
+    })
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Category> updateCategory(@PathVariable Long id, @RequestBody Category category) {
+        return ResponseEntity.ok(categoryService.updateCategory(id, category));
+    }
+
+
+    /* ===================================================================================== */
+
+    // http://localhost:8080/categories/delete/1
+
+    @Operation(summary = "Remove uma Categoria pelo ID")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Categoria removida com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Categoria não encontrada")
+    })
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Category> deleteCategory(@PathVariable Long id) {
+        categoryService.deleteCategory(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+    
+}
+```
+
+### 📌 Na prática - manuseando `@RequestParam`
+
+#### 📦 Service Implements **`ProductServiceImplements`**
+
+```java
+@Service
+@RequiredArgsConstructor
+public class ProductServiceImplements implements ProductService {
+
+    private final ProductRepository productRepository;
+
+    @Override
+    public Product addProduct(Product product) {
+        return productRepository.save(product);
+    }
+
+    @Override
+    public Product updateProduct(Long id, Product product) {
+        Product productBD = findByIdOrThrow(id);
+
+        productBD.setName(product.getName());
+        productBD.setDescription(product.getDescription());
+        productBD.setPrice(product.getPrice());
+        productBD.setQuantity(product.getQuantity());
+        productBD.setProductState(product.getProductState());
+        productBD.setCategory(product.getCategory());
+
+        return productRepository.save(productBD);
+    }
+}
+```
+
+---
+
+#### 📦 Controller Implements **`ProductController`**
+
+```java
+@RestController
+@RequestMapping("/products")
+@RequiredArgsConstructor
+public class ProductController {
+
+    private final ProductService productService;
+
+    /* =============== Manuseando Parâmetros e associando com Category - @RequestParam =============== */
+
+    /** JSON
+        {
+            "id": 0,
+            "name": "string",
+            "description": "string",
+            "price": 0,
+            "quantity": 1,
+            "productState": "AVAILABLE",
+            "category": {
+                "id": 0,
+                "name": "string"
+            }
+        }
+    */
+
+    // http://localhost:8080/products/create-param/1?nomeProduto={nomeProduto}&descricaoProduto={descricaoProduto}&precoProduto={precoProduto}&quantidadeProduto={quantidadeProduto}&estadoProduto{estadoProduto}
+    @Operation(summary = "Cria uma novo produto - Manuseando Parâmetros")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Produto criado com sucesso"),
+        @ApiResponse(responseCode = "409", description = "Id já existe")
+    })
+    @PostMapping("/create-param/{categoryId}")
+    public ResponseEntity<Product> addProductWithParam(
+        @RequestBody @Valid Product product, 
+        @PathVariable Long categoryId,
+        @RequestParam("nomeProduto") String name,
+        @RequestParam("descricaoProduto") String description,
+        @RequestParam("precoProduto") BigDecimal price,
+        @RequestParam("quantidadeProduto") int quantity,
+        @RequestParam("estadoProduto") ProductState productState) {
+
+            Product createProduct = new Product();
+            createProduct.setCategory(product.getCategory());
+            createProduct.setName(name);
+            createProduct.setDescription(description);
+            createProduct.setPrice(price);
+            createProduct.setQuantity(quantity);
+            createProduct.setProductState(productState);
+
+            Product productSave = productService.addProduct(createProduct);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(productSave);
+    }
+
+
+    /* =============== Manuseando Parâmetros e associando com Category - @RequestParam =============== */
+
+    @Operation(summary = "Atualizar um produto existente - Manuseando Parâmetros")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Produto atualizado com sucesso"),
+        @ApiResponse(responseCode = "404", description = "Produto não encontrado")
+    })
+    @PutMapping("/update/{productId}/category/{categoryId}")
+    public ResponseEntity<Product> updateProductWithParam(
+        @PathVariable Long productId, 
+        @PathVariable Long categoryId,
+        @RequestBody Product product,
+        @RequestParam("nomeProduto") String name,
+        @RequestParam("descricaoProduto") String description,
+        @RequestParam("precoProduto") BigDecimal price,
+        @RequestParam("quantidadeProduto") int quantity,
+        @RequestParam("estadoProduto") ProductState productState) {
+
+            Product createProduct = new Product();
+            createProduct.setCategory(product.getCategory());
+            createProduct.setName(name);
+            createProduct.setDescription(description);
+            createProduct.setPrice(price);
+            createProduct.setQuantity(quantity);
+            createProduct.setProductState(productState);
+
+            return ResponseEntity.ok(productService.updateProduct(productId, createProduct));
+    }
+}
+```
+
+---
+
 ## Feito por: **`Daniel Penelva`**
