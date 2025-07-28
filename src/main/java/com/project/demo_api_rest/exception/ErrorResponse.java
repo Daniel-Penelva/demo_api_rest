@@ -14,6 +14,13 @@ public class ErrorResponse {
     private LocalDateTime timestamp;
     private String errorDetails;
 
+    public ErrorResponse(String message, int statusCode, String errorDetails, LocalDateTime timestamp) {
+        this.message = message;
+        this.statusCode = statusCode;
+        this.errorDetails = errorDetails;
+        this.timestamp = timestamp; // Define o timestamp atual
+    }
+
     public ErrorResponse(String message, int statusCode, String errorDetails) {
         this.message = message;
         this.statusCode = statusCode;
